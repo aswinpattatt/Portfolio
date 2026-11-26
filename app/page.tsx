@@ -22,32 +22,62 @@ const featuredSlugs = [
   "streaming-platform-churn-prediction",
 ];
 
-function useTypewriter(text: string, speed = 45, startDelay = 300) {
+// Types the text with natural jitter, pauses at word boundaries, holds the
+// full text, erases it, then loops. `idle` is true while the cursor is waiting.
+function useTypewriter(text: string) {
   const [output, setOutput] = useState("");
+  const [idle, setIdle] = useState(true);
 
   useEffect(() => {
     let i = 0;
-    let interval: ReturnType<typeof setInterval>;
-    const timeout = setTimeout(() => {
-      interval = setInterval(() => {
-        i++;
-        setOutput(text.slice(0, i));
-        if (i >= text.length) clearInterval(interval);
-      }, speed);
-    }, startDelay);
+    let timer: ReturnType<typeof setTimeout>;
+    let cancelled = false;
+
+    const wait = (ms: number, idleDuring: boolean, next: () => void) => {
+      setIdle(idleDuring);
+      timer = setTimeout(() => {
+        if (!cancelled) next();
+      }, ms);
+    };
+
+    const type = () => {
+      i++;
+      setOutput(text.slice(0, i));
+      if (i >= text.length) {
+        wait(2000, true, erase); // hold the finished name
+        return;
+      }
+      const atWordEnd = text[i] === " ";
+      if (atWordEnd) {
+        wait(400 + Math.random() * 250, true, type); // break between words
+      } else {
+        wait(40 + Math.random() * 60, false, type);
+      }
+    };
+
+    const erase = () => {
+      i--;
+      setOutput(text.slice(0, i));
+      if (i <= 0) {
+        wait(600, true, type); // break before retyping
+        return;
+      }
+      wait(22, false, erase);
+    };
+
+    wait(400, true, type);
 
     return () => {
-      clearTimeout(timeout);
-      clearInterval(interval);
+      cancelled = true;
+      clearTimeout(timer);
     };
-  }, [text, speed, startDelay]);
+  }, [text]);
 
-  return output;
+  return { output, idle };
 }
 
 export default function Home() {
-  const typedName = useTypewriter(about.name);
-  const isDone = typedName.length === about.name.length;
+  const { output: typedName, idle: isDone } = useTypewriter(about.name);
 
   const featured = featuredSlugs
     .map((slug) => projects.find((p) => p.slug === slug))
@@ -70,7 +100,7 @@ export default function Home() {
           {typedName}
           <span
             className={`inline-block w-[0.5em] ml-1 -translate-y-1 ${
-              isDone ? "animate-pulse" : "opacity-0"
+              isDone ? "animate-pulse" : ""
             }`}
             style={{ backgroundColor: "var(--accent)", height: "0.9em" }}
           />

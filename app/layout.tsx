@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Space_Grotesk, JetBrains_Mono } from "next/font/google";
 import Nav from "./components/Nav";
 import ThemeToggle from "./components/ThemeToggle";
+import MatrixRain from "./components/MatrixRain";
 import { ThemeProvider } from "./components/ThemeProvider";
 import "./globals.css";
 
@@ -51,8 +52,9 @@ export default function RootLayout({
       suppressHydrationWarning
       className={`${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
     >
-      <body className="overflow-x-hidden">
+      <body className="flex min-h-screen flex-col overflow-x-hidden">
         <ThemeProvider>
+          <MatrixRain />
           <header className="sticky top-0 z-50 border-b border-fg-10 bg-[var(--background)]/90 backdrop-blur">
   <nav className="relative mx-auto flex max-w-5xl items-center justify-between px-6 py-4">
     <Link
@@ -67,8 +69,8 @@ export default function RootLayout({
     </div>
   </nav>
 </header>
-          <main className="mx-auto max-w-5xl px-6 py-12">{children}</main>
-          <footer className="border-t border-fg-10 mt-24 py-8 text-center text-sm text-muted font-mono-label">
+          <main className="mx-auto w-full max-w-5xl flex-1 px-6 py-12">{children}</main>
+          <footer className="relative z-10 bg-[var(--background)] border-t border-fg-10 mt-12 py-6 text-center text-sm text-muted font-mono-label">
             © {new Date().getFullYear()} Aswin P Ajayan
           </footer>
         </ThemeProvider>
